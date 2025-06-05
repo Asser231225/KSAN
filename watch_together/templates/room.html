@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Комната просмотра {{ room_id }}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .room-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .room-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .room-id {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .share-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border-left: 4px solid #667eea;
+        }
+
+        .share-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .share-link {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .link-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .copy-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+            margin-bottom: 20px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        #videoPlayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 15px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 20px;
+            background: #e8f5e8;
+            border-radius: 10px;
+            font-weight: 500;
+            border-left: 4px solid #28a745;
+        }
+
+        .status-icon {
+            width: 8px;
+            height: 8px;
+            background: #28a745;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Чат */
+        .chat-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 40px);
+        }
+
+        .chat-header {
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            margin-bottom: 20px;
+        }
+
+        .chat-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .online-count {
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 85%;
+            word-wrap: break-word;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.own {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 6px;
+        }
+
+        .message.other {
+            background: #f8f9fa;
+            color: #333;
+            border-bottom-left-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .message-username {
+            font-weight: 600;
+            font-size: 12px;
+            margin-bottom: 4px;
+            opacity: 0.8;
+        }
+
+        .message-text {
+            line-height: 1.4;
+        }
+
+        .message-time {
+            font-size: 11px;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .username-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .username-dialog {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .username-dialog h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .username-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        .username-input:focus {
+            border-color: #667eea;
+        }
+
+        .join-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto;
+            }
+            
+            .chat-panel {
+                height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .main-content,
+            .chat-panel {
+                padding: 20px;
+            }
+            
+            .room-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Модальное окно для ввода имени -->
+    <div id="usernameModal" class="username-modal">
+        <div class="username-dialog">
+            <h3>👋 Добро пожаловать!</h3>
+            <p>Введите ваше имя для участия в чате:</p>
+            <input type="text" id="usernameInput" class="username-input" placeholder="Ваше имя" maxlength="20">
+            <button onclick="joinRoom()" class="join-btn">Присоединиться</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="room-header">
+                <h1 class="room-title">
+                    🎬 Комната просмотра 
+                    <span class="room-id">{{ room_id }}</span>
+                </h1>
+            </div>
+
+            <div class="share-section">
+                <div class="share-title">📤 Поделиться комнатой:</div>
+                <div class="share-link">
+                    <input type="text" class="link-input" id="roomUrl" value="{{ request.url }}" readonly>
+                    <button onclick="copyLink()" class="copy-btn" id="copyBtn">📋 Копировать</button>
+                </div>
+            </div>
+
+            <div class="video-container">
+                <video id="videoPlayer" controls>
+                    <source src="/static/{{ video_name }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            
+            <div class="status" id="status">
+                <div class="status-icon"></div>
+                <span>Подключение к комнате...</span>
+            </div>
+        </div>
+
+        <div class="chat-panel">
+            <div class="chat-header">
+                <h2 class="chat-title">
+                    💬 Чат 
+                    <span class="online-count" id="onlineCount">0</span>
+                </h2>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages"></div>
+            
+            <div class="chat-input-container">
+                <input type="text" id="chatInput" class="chat-input" placeholder="Введите сообщение..." maxlength="500">
+                <button onclick="sendMessage()" class="send-btn" id="sendBtn">
+                    ➤
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const roomId = "{{ room_id }}";
+        const video = document.getElementById("videoPlayer");
+        const statusElement = document.getElementById("status");
+        const chatMessages = document.getElementById("chatMessages");
+        const chatInput = document.getElementById("chatInput");
+        const onlineCountElement = document.getElementById("onlineCount");
+        const usernameModal = document.getElementById("usernameModal");
+        const usernameInput = document.getElementById("usernameInput");
+        
+        let suppress = false;
+        let currentVersion = 0;
+        let isUpdating = false;
+        let lastUpdateTime = Date.now();
+        let lastPlayState = false;
+        let username = "";
+        let userId = Math.random().toString(36).substr(2, 9);
+        
+        // Для отслеживания уже полученных сообщений
+        let displayedMessages = new Set();
+        let lastMessageTimestamp = 0;
+
+        // Инициализация
+        window.addEventListener('load', () => {
+            usernameInput.focus();
+        });
+
+        // Обработка Enter в поле ввода имени
+        usernameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                joinRoom();
+            }
+        });
+
+        // Обработка Enter в чате
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Присоединение к комнате
+        function joinRoom() {
+            const name = usernameInput.value.trim();
+            if (name.length < 1) {
+                alert('Пожалуйста, введите имя');
+                return;
+            }
+            username = name;
+            usernameModal.style.display = 'none';
+            loadChatHistory();
+            startSynchronization();
+        }
+
+        // Загрузка истории сообщений при подключении
+        async function loadChatHistory() {
+            try {
+                const response = await fetch(`/room/${roomId}/messages?limit=20`);
+                if (response.ok) {
+                    const data = await response.json();
+                    data.messages.forEach(message => {
+                        const messageId = `${message.user_id}-${message.timestamp}`;
+                        if (!displayedMessages.has(messageId)) {
+                            displayedMessages.add(messageId);
+                            addChatMessage(message, false); // false = не скроллить вниз для истории
+                            
+                            // Обновляем последний timestamp
+                            const messageTime = new Date(message.timestamp).getTime();
+                            if (messageTime > lastMessageTimestamp) {
+                                lastMessageTimestamp = messageTime;
+                            }
+                        }
+                    });
+                    // После загрузки истории скроллим вниз
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            } catch (e) {
+                console.error('Ошибка загрузки истории чата:', e);
+            }
+        }
+
+        // Копирование ссылки
+        function copyLink() {
+            const url = document.getElementById('roomUrl').value;
+            navigator.clipboard.writeText(url)
+                .then(() => {
+                    const btn = document.getElementById('copyBtn');
+                    btn.innerHTML = '✅ Скопировано!';
+                    setTimeout(() => btn.innerHTML = '📋 Копировать', 2000);
+                });
+        }
+
+        // Отправка состояния на сервер
+        async function sendState(playing, time) {
+            if (suppress || isUpdating) return;
+            isUpdating = true;
+            lastUpdateTime = Date.now();
+            
+            try {
+                const response = await fetch(`/room/${roomId}/update`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        playing, 
+                        time, 
+                        user_id: userId,
+                        username: username 
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentVersion = data.version;
+                    updateStatus(`Синхронизировано (v${currentVersion})`);
+                    lastPlayState = playing;
+                }
+            } catch (e) {
+                console.error('Ошибка отправки состояния:', e);
+                updateStatus('Ошибка синхронизации', 'error');
+            } finally {
+                isUpdating = false;
+            }
+        }
+
+        // Получение обновлений состояния и чата
+        async function pollState() {
+            while (true) {
+                try {
+                    const response = await fetch(`/room/${roomId}/poll?last_version=${currentVersion}&user_id=${userId}&username=${encodeURIComponent(username)}&last_message_time=${lastMessageTimestamp}`);
+                    
+                    if (!response.ok) {
+                        updateStatus('Переподключение...', 'warning');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        continue;
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Обновление счетчика онлайн
+                    if (data.online_count !== undefined) {
+                        onlineCountElement.textContent = data.online_count;
+                    }
+                    
+                    // Обновление сообщений чата (только новые)
+                    if (data.messages && data.messages.length > 0) {
+                        data.messages.forEach(message => {
+                            const messageId = `${message.user_id}-${message.timestamp}`;
+                            const messageTime = new Date(message.timestamp).getTime();
+                            
+                            // Добавляем только новые сообщения
+                            if (!displayedMessages.has(messageId) && messageTime > lastMessageTimestamp) {
+                                displayedMessages.add(messageId);
+                                addChatMessage(message, true); 
+                                lastMessageTimestamp = messageTime;
+                            }
+                        });
+                    }
+                    
+                    // Обновление состояния видео
+                    if (data.version > currentVersion) {
+                        suppress = true;
+                        currentVersion = data.version;
+                        updateStatus(`Синхронизировано (v${currentVersion})`);
+                        
+                        const timeDiff = Math.abs(video.currentTime - data.state.time);
+                        
+                        if (timeDiff > 0.5) {
+                            video.currentTime = data.state.time;
+                        }
+                        
+                        if (data.state.playing) {
+                            if (video.paused) {
+                                video.play().catch(e => console.log("Автовоспроизведение заблокировано"));
+                            }
+                        } else {
+                            if (!video.paused) {
+                                video.pause();
+                            }
+                        }
+                        
+                        lastPlayState = data.state.playing;
+                        suppress = false;
+                    }
+                } catch (e) {
+                    console.error('Ошибка подключения:', e);
+                    updateStatus('Ошибка подключения, повторное соединение...', 'error');
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                }
+            }
+        }
+
+        // Отправка сообщения в чат
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            try {
+                const response = await fetch(`/room/${roomId}/chat`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        message: message,
+                        user_id: userId,
+                        username: username
+                    })
+                });
+                
+                if (response.ok) {
+                    chatInput.value = '';
+                }
+            } catch (e) {
+                console.error('Ошибка отправки сообщения:', e);
+            }
+        }
+
+        // Добавление сообщения в чат
+        function addChatMessage(messageData, shouldScroll = true) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${messageData.user_id === userId ? 'own' : 'other'}`;
+            
+            const time = new Date(messageData.timestamp).toLocaleTimeString('ru-RU', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            messageDiv.innerHTML = `
+                ${messageData.user_id !== userId ? `<div class="message-username">${escapeHtml(messageData.username)}</div>` : ''}
+                <div class="message-text">${escapeHtml(messageData.message)}</div>
+                <div class="message-time">${time}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            
+            // Скроллим вниз только для новых сообщений
+            if (shouldScroll) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Ограничиваем количество отображаемых сообщений
+            const messages = chatMessages.children;
+            if (messages.length > 100) {
+                chatMessages.removeChild(messages[0]);
+                // Удаляем из Set самые старые ID
+                if (displayedMessages.size > 100) {
+                    const oldestMessages = Array.from(displayedMessages).slice(0, 10);
+                    oldestMessages.forEach(id => displayedMessages.delete(id));
+                }
+            }
+        }
+
+        // Экранирование HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Обновление статуса
+        function updateStatus(text, type = 'success') {
+            const statusText = statusElement.querySelector('span');
+            statusText.textContent = text;
+            
+            statusElement.className = 'status';
+            if (type === 'error') {
+                statusElement.style.background = '#f8d7da';
+                statusElement.style.borderLeftColor = '#dc3545';
+                statusElement.querySelector('.status-icon').style.background = '#dc3545';
+            } else if (type === 'warning') {
+                statusElement.style.background = '#fff3cd';
+                statusElement.style.borderLeftColor = '#ffc107';
+                statusElement.querySelector('.status-icon').style.background = '#ffc107';
+            } else {
+                statusElement.style.background = '#e8f5e8';
+                statusElement.style.borderLeftColor = '#28a745';
+                statusElement.querySelector('.status-icon').style.background = '#28a745';
+            }
+        }
+
+        // Запуск синхронизации
+        function startSynchronization() {
+            // Обработчики событий видео
+            video.addEventListener("play", () => {
+                if (!suppress && Date.now() - lastUpdateTime > 100) {
+                    sendState(true, video.currentTime);
+                }
+            });
+
+            video.addEventListener("pause", () => {
+                if (!suppress && Date.now() - lastUpdateTime > 100) {
+                    sendState(false, video.currentTime);
+                }
+            });
+
+            video.addEventListener("seeked", () => {
+                if (!suppress && Date.now() - lastUpdateTime > 100) {
+                    sendState(!video.paused, video.currentTime);
+                }
+            });
+
+            
+            pollState();
+            
+            
+            setInterval(() => {
+                if (!isUpdating && Date.now() - lastUpdateTime > 5000) {
+                    sendState(!video.paused, video.currentTime);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
