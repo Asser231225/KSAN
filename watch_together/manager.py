@@ -192,14 +192,12 @@ async def poll_state(room_id: str, last_version: int = 0, last_message_version: 
     
     # Обрабатываем сообщения
     if last_message_version == 0:
-        # Первое подключение - отправляем последние 10 сообщений
+        
         current_state["messages"] = room["messages"][-10:] if room["messages"] else []
     elif room["message_version"] > last_message_version:
-        # Есть новые сообщения - отправляем только новые
-        # Находим новые сообщения, сравнивая по ID
+       
         if room["messages"]:
-            # Простой способ: отправляем последние несколько сообщений
-            # В реальном приложении лучше отслеживать по timestamp или ID
+            
             current_state["messages"] = room["messages"][-3:] if len(room["messages"]) >= 3 else room["messages"]
     
     # Проверяем, нужно ли ждать обновлений
@@ -326,10 +324,9 @@ async def cleanup_inactive_rooms():
             rooms_to_delete = []
             
             for room_id, room in rooms.items():
-                # Если в комнате нет активных пользователей более 10 минут
+               
                 if not room["users"]:
-                    # Проверяем время последнего обновления состояния
-                    # Если комната не использовалась более 10 минут, помечаем для удаления
+                    
                     rooms_to_delete.append(room_id)
                 else:
                     # Очищаем неактивных пользователей

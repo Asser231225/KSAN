@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Скрипт для запуска CineSync - приложения синхронного просмотра видео
-"""
+
 
 import uvicorn
 import os
